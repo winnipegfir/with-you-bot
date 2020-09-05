@@ -1,0 +1,9 @@
+counter.txt
+
+killme.txt
+
+.env
+
+.idea/*
+
+venv/*

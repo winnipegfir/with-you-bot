@@ -1,6 +1,7 @@
 import discord
 import datetime
 import mysql.connector
+import array
 import os
 from dotenv import load_dotenv
 
@@ -128,6 +129,7 @@ async def on_message(message):
         # Tell them the number that they want to know!
         embed = discord.Embed(title=("\"With You\" Bot"), type="Rich", description="The \"with you\":tm: counter is at " + str(counter) + ".", color=0x013162)
         for x in final:
+            print(x)
             embed.add_field(name="\u200b", value="<@" + str(x[0]) + "> | " + str(x[1]) + " times", inline=True)
         embed.set_footer(text=("The \"with you\" counter was viewed at " + str(utc_datetime.strftime("%H%Mz")) + " | © Kolby Dunning"))
         await channel.send(embed=embed)

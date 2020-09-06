@@ -37,6 +37,22 @@ else:
 TOKEN = os.getenv('DISCORD_TOKEN')
 ADMIN = int(os.getenv('ADMIN_ID'))
 
+
+#Create DB table if it doesn't exist
+db = mysql.connector.connect(
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    host=os.getenv("DB_HOST"),
+    database=os.getenv("DB_DATABASE")
+)
+
+table_check = db.cursor()
+table_check.execute("SHOW TABLES LIKE 'withyou'")
+if not table_check.fetchone():
+    print("Creating DB table")
+    table_check.execute("CREATE TABLE withyou (id INT AUTO_INCREMENT PRIMARY KEY, discord_id BIGINT NOT NULL, withyou INT NOT NULL, killme INT NOT NULL)")
+    db.commit()
+
 client = discord.Client()
 @client.event
 async def on_ready():
@@ -180,7 +196,7 @@ async def on_message(message):
         embed.set_footer(text=("This .killme was submitted at " + str(utc_datetime.strftime("%H%Mz")) + " | © Kolby Dunning"))
         await channel.send(embed=embed)
 
-    if message.content.lower() == (".withyou rm"):
+    if message.content.lower() == (".killme rm"):
         # Read the file, remove one, read again
         with open('./killme.txt', 'r') as file:
             counter = file.read()

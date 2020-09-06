@@ -1,7 +1,6 @@
 import discord
 import datetime
 import mysql.connector
-import array
 import os
 from dotenv import load_dotenv
 

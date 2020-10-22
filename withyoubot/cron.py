@@ -18,7 +18,7 @@ with_you_results = with_you.fetchall()
 
 intents = discord.Intents.default()
 intents.members = True
-client = discord.Client()
+client = discord.Client(intents=intents)
 
 
 @client.event

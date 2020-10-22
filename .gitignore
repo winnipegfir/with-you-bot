@@ -7,3 +7,5 @@ killme.txt
 .idea/*
 
 venv/*
+
+__pycache__/

@@ -1,67 +1,28 @@
 import discord
-import datetime
 import mysql.connector
-import array
 import os
-from dotenv import load_dotenv
+import withyoubot.footer as footer
+import withyoubot.start as start
 
 print("Starting...")
 
-#Make sure we have our required files
-if os.path.exists('.env'):
-    load_dotenv()
-    pass
-else:
-    f = open('.env', 'x')
-    f.write("# .env\nDISCORD_TOKEN=\nGUILD_ID=\nADMIN_ID=\n\n# Database stuff\nDB_HOST=\nDB_USER=\nDB_PASSWORD=\nDB_DATABASE=")
-    f.close()
-    print("You need to fill in the fields in the .env file.")
-    exit()
-
-if os.path.exists('counter.txt'):
-    pass
-else:
-    f = open('counter.txt', 'x')
-    f.write("0")
-    f.close()
-
-if os.path.exists('killme.txt'):
-    pass
-else:
-    f = open('killme.txt', 'x')
-    f.write("0")
-    f.close()
+start.start()
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 ADMIN = int(os.getenv('ADMIN_ID'))
-
-
-#Create DB table if it doesn't exist
-db = mysql.connector.connect(
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD"),
-    host=os.getenv("DB_HOST"),
-    database=os.getenv("DB_DATABASE")
-)
-
-table_check = db.cursor()
-table_check.execute("SHOW TABLES LIKE 'withyou'")
-if not table_check.fetchone():
-    print("Creating DB table")
-    table_check.execute("CREATE TABLE withyou (id INT AUTO_INCREMENT PRIMARY KEY, discord_id BIGINT NOT NULL, withyou INT NOT NULL, killme INT NOT NULL)")
-    db.commit()
-
 client = discord.Client()
+
+
 @client.event
 async def on_ready():
     activity = discord.Activity(name="\"with you\"s, sadly", type=discord.ActivityType.listening)
     await client.change_presence(activity=activity)
     print("Bot is ready!")
 
+
 @client.event
 async def on_message(message):
     channel = message.channel
-    utc_datetime = datetime.datetime.utcnow()
     database = mysql.connector.connect(
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
@@ -69,7 +30,7 @@ async def on_message(message):
         database=os.getenv("DB_DATABASE")
     )
     # .withyou
-    if message.content.lower() == (".withyou"):
+    if message.content.lower() == ".withyou":
         # Read the file, add one, read again
         with open('./counter.txt', 'r') as file:
             counter = file.read()
@@ -82,19 +43,23 @@ async def on_message(message):
         write_database.execute("SELECT * FROM withyou WHERE discord_id = " + str(message.author.id))
         exists = write_database.fetchone()
 
-        if(exists):
-            write_database.execute("UPDATE withyou SET withyou = withyou + 1 WHERE discord_id = " + str(message.author.id))
+        if exists:
+            write_database.execute(
+                "UPDATE withyou SET withyou = withyou + 1 WHERE discord_id = " + str(message.author.id))
         else:
-            write_database.execute("INSERT INTO withyou (discord_id, withyou, killme) VALUES (" + str(message.author.id) + ", 1, 0)")
+            write_database.execute(
+                "INSERT INTO withyou (discord_id, withyou, killme) VALUES (" + str(message.author.id) + ", 1, 0)")
 
         database.commit()
 
         # We've got our magical number, send the message!
-        embed = discord.Embed(title=("\"With You\" Bot"), type="Rich", description="The \"with you\":tm: counter is now at " + str(counter) + ".", color=0x013162)
-        embed.set_footer(text=("This \"with you\" was submitted at " + str(utc_datetime.strftime("%H%Mz")) + " | © Kolby Dunning"))
+        embed = discord.Embed(title="\"With You\" Bot",
+                              type="Rich", description="The \"with you\":tm: counter is now at " + str(counter) + ".",
+                              color=0x013162)
+        embed.set_footer(text=footer.footer("This \"with you\" was submitted at "))
         await channel.send(embed=embed)
 
-    if message.content.lower() == (".withyou rm"):
+    if message.content.lower() == ".withyou rm":
         # Read the file, remove one, read again
         with open('./counter.txt', 'r') as file:
             counter = file.read()
@@ -108,11 +73,13 @@ async def on_message(message):
         database.commit()
 
         # We've got our magical number, send the message!
-        embed = discord.Embed(title=("\"With You\" Bot"), type="Rich", description="A \"with you\" has been removed. The \"with you\":tm: counter is now at " + str(counter) + ".", color=0x013162)
-        embed.set_footer(text=("This \"with you\" was removed at " + str(utc_datetime.strftime("%H%Mz")) + " | © Kolby Dunning"))
+        embed = discord.Embed(title="\"With You\" Bot", type="Rich",
+                              description="A \"with you\" has been removed. The \"with you\":tm: counter is now at " +
+                                          str(counter) + ".", color=0x013162)
+        embed.set_footer(text=footer.footer("This \"with you\" was removed at "))
         await channel.send(embed=embed)
 
-    if message.content.lower() == (".withyou show"):
+    if message.content.lower() == ".withyou show":
         # Read the file
         with open('./counter.txt', 'r') as file:
             counter = file.read()
@@ -127,23 +94,32 @@ async def on_message(message):
                 final.append([x[1], x[2]])
 
         # Tell them the number that they want to know!
-        embed = discord.Embed(title=("\"With You\" Bot"), type="Rich", description="The \"with you\":tm: counter is at " + str(counter) + ".", color=0x013162)
+        embed = discord.Embed(title="\"With You\" Bot", type="Rich",
+                              description="The \"with you\":tm: counter is at " + str(counter) + ".", color=0x013162)
         for x in final:
-            print(x)
             embed.add_field(name="\u200b", value="<@" + str(x[0]) + "> | " + str(x[1]) + " times", inline=True)
-        embed.set_footer(text=("The \"with you\" counter was viewed at " + str(utc_datetime.strftime("%H%Mz")) + " | © Kolby Dunning"))
+        embed.set_footer(text=footer.footer("The \"with you\" counter was viewed at "))
         await channel.send(embed=embed)
 
-    if message.content.lower() == (".withyou help"):
-        embed = discord.Embed(title=("\"With You\" Bot"), description="The \"with you\":tm: bot is for \"with you\" check in's by pilots on frequency. Feel free to add one to the counter if you hear one!", color=0x013162)
+    if message.content.lower() == ".withyou help":
+        embed = discord.Embed(title="\"With You\" Bot",
+                              description="The \"with you\":tm: bot is for \"with you\" check in's by pilots on "
+                                          "frequency. Feel free to add one to the counter if you hear one!",
+                              color=0x013162)
         embed.add_field(name=".withyou", value="Adds 1 \"with you\" to the counter!", inline=False)
         embed.add_field(name=".withyou rm", value="Removes 1 \"with you\" from the counter!", inline=False)
-        embed.add_field(name=".withyou show", value="Lets you see the amount of \"with you\"s in the counter!", inline=False)
-        embed.add_field(name=".withyou help", value="This one is fairly easy. It shows you the commands for this bot!", inline=False)
-        embed.add_field(name="\u200b", value="Introducing .killme! Made for the times you just want to die while controlling!", inline=False)
+        embed.add_field(name=".withyou show", value="Lets you see the amount of \"with you\"s in the counter!",
+                        inline=False)
+        embed.add_field(name=".withyou help", value="This one is fairly easy. It shows you the commands for this bot!",
+                        inline=False)
+        embed.add_field(name="\u200b",
+                        value="Introducing .killme! Made for the times you just want to die while controlling!",
+                        inline=False)
         embed.add_field(name=".killme", value="Adds 1 .killme to the counter!", inline=False)
-        embed.add_field(name=".killme show", value="Displays the amount of times our controllers have been over-stressed by VATSIM's pilots.", inline=False)
-        embed.set_footer(text=("The \"with you\" and .killme commands were viewed at " + str(utc_datetime.strftime("%H%Mz")) + " | © Kolby Dunning"))
+        embed.add_field(name=".killme show",
+                        value="Displays the amount of times our controllers have been over-stressed by VATSIM's pilots.",
+                        inline=False)
+        embed.set_footer(text=footer.footer("The \"with you\" and .killme commands were viewed at"))
         await channel.send(embed=embed)
 
     if message.content.lower().startswith(".withyou num "):
@@ -157,8 +133,9 @@ async def on_message(message):
                 int(new_number)
                 pass
             except ValueError:
-                embed = discord.Embed(title=("\"With You\" Bot"), type="Rich", description="Uh oh. The number need to be an integer.", color=0xFF0000)
-                embed.set_footer(text=("The \"with you\" counter was set at " + str(utc_datetime.strftime("%H%Mz")) + " | © Kolby Dunning"))
+                embed = discord.Embed(title="\"With You\" Bot", type="Rich",
+                                      description="Uh oh. The number needs to be an integer.", color=0xFF0000)
+                embed.set_footer(text=footer.footer("The \"with you\" counter was supposed to be set at "))
                 await user.send(embed=embed)
                 return
 
@@ -169,13 +146,14 @@ async def on_message(message):
                 counter = file.read()
 
             # Tell me so I know it works!
-            embed = discord.Embed(title=("\"With You\" Bot"), type="Rich", description="The \"with you\":tm: counter has been set at " + str(counter) + ".", color=0x013162)
-            embed.set_footer(text=("The \"with you\" counter was set at " + str(
-                utc_datetime.strftime("%H%Mz")) + " | © Kolby Dunning"))
+            embed = discord.Embed(title="\"With You\" Bot", type="Rich",
+                                  description="The \"with you\":tm: counter has been set at " + str(counter) + ".",
+                                  color=0x013162)
+            embed.set_footer(text=footer.footer("The \"with you\" counter was set at "))
             await user.send(embed=embed)
 
     # .killme
-    if message.content.lower() == (".killme"):
+    if message.content.lower() == ".killme":
         # Read the file, add one, read again
         with open('./killme.txt', 'r') as file:
             killme = file.read()
@@ -188,19 +166,23 @@ async def on_message(message):
         write_database.execute("SELECT * FROM withyou WHERE discord_id = " + str(message.author.id))
         exists = write_database.fetchone()
 
-        if (exists):
-            write_database.execute("UPDATE withyou SET killme = killme + 1 WHERE discord_id = " + str(message.author.id))
+        if exists:
+            write_database.execute(
+                "UPDATE withyou SET killme = killme + 1 WHERE discord_id = " + str(message.author.id))
         else:
-            write_database.execute("INSERT INTO withyou (discord_id, withyou, killme) VALUES (" + str(message.author.id) + ", 0, 1)")
+            write_database.execute(
+                "INSERT INTO withyou (discord_id, withyou, killme) VALUES (" + str(message.author.id) + ", 0, 1)")
 
         database.commit()
 
         # We've got our magical number, send the message!
-        embed = discord.Embed(title=("\"With You\" Bot"), type="Rich", description="There's another `.killme`. The Winnipeg controllers have been over-stressed " + str(killme) + " times.", color=0x013162)
-        embed.set_footer(text=("This .killme was submitted at " + str(utc_datetime.strftime("%H%Mz")) + " | © Kolby Dunning"))
+        embed = discord.Embed(title="\"With You\" Bot", type="Rich",
+                              description="There's another `.killme`. The Winnipeg controllers have been over-stressed "
+                                          + str(killme) + " times.", color=0x013162)
+        embed.set_footer(text=footer.footer("This .killme was submitted at "))
         await channel.send(embed=embed)
 
-    if message.content.lower() == (".killme rm"):
+    if message.content.lower() == ".killme rm":
         # Read the file, remove one, read again
         with open('./killme.txt', 'r') as file:
             counter = file.read()
@@ -214,11 +196,13 @@ async def on_message(message):
         database.commit()
 
         # We've got our magical number, send the message!
-        embed = discord.Embed(title=("\"With You\" Bot"), type="Rich", description="A kill me has been removed. The 'kill me' counter is now at " + str(counter) + ".", color=0x013162)
-        embed.set_footer(text=("This .killme was removed at " + str(utc_datetime.strftime("%H%Mz")) + " | © Kolby Dunning"))
+        embed = discord.Embed(title="\"With You\" Bot", type="Rich",
+                              description="A kill me has been removed. The 'kill me' counter is now at " + str(
+                                  counter) + ".", color=0x013162)
+        embed.set_footer(text=footer.footer("This .killme was removed at "))
         await channel.send(embed=embed)
 
-    if message.content.lower() == (".killme show"):
+    if message.content.lower() == ".killme show":
         # Read the file
         with open('./killme.txt', 'r') as file:
             killme = file.read()
@@ -233,10 +217,13 @@ async def on_message(message):
                 final.append([x[1], x[3]])
 
         # Tell them the number that they want to know!
-        embed = discord.Embed(title=("\"With You\" Bot"), type="Rich", description="The Winnipeg controllers have been over-stressed " + str(killme) + " times.", color=0x013162)
+        embed = discord.Embed(title="\"With You\" Bot", type="Rich",
+                              description="The Winnipeg controllers have been over-stressed " + str(killme) + " times.",
+                              color=0x013162)
         for x in final:
             embed.add_field(name="\u200b", value="<@" + str(x[0]) + "> | " + str(x[1]) + " times", inline=True)
-        embed.set_footer(text=("The .killme counter was viewed at " + str(utc_datetime.strftime("%H%Mz")) + " | © Kolby Dunning"))
+        embed.set_footer(text=footer.footer("The .killme counter was viewed at "))
         await channel.send(embed=embed)
+
 
 client.run(TOKEN)

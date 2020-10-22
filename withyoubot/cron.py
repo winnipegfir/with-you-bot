@@ -16,7 +16,10 @@ with_you = database.cursor()
 with_you.execute("SELECT * FROM withyou")
 with_you_results = with_you.fetchall()
 
+intents = discord.Intents.default()
+intents.members = True
 client = discord.Client()
+
 
 @client.event
 async def on_ready():

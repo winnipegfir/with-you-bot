@@ -1,0 +1,36 @@
+{
+  "commands": [
+    {
+      "name": ".withyou",
+      "value": "Adds 1 \"with you\" to the counter!"
+    },
+    {
+      "name": ".withyou rm",
+      "value": "Removes 1 \"with you\" from the counter!"
+    },
+    {
+      "name": ".withyou show",
+      "value": "Lets you see the amount of \"with you\"s in the counter!"
+    },
+    {
+      "name": ".withyou help",
+      "value": "This one is fairly easy. It shows you the commands for this bot!"
+    },
+    {
+      "name": "\u200b",
+      "value": "Introducing .killme! Made for the times you just want to die while controlling!"
+    },
+    {
+      "name": ".killme",
+      "value": "Adds 1 .killme to the counter!"
+    },
+    {
+      "name": ".killme rm",
+      "value": "Removes 1 .killme from the counter!"
+    },
+    {
+      "name": ".killme show",
+      "value": "Displays the amount of times our controllers have been over-stressed by VATSIM's pilots."
+    }
+  ]
+}

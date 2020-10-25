@@ -1,5 +1,5 @@
 # with-you-bot
-An over-engineered counter that allows for our controllers to track the "with you" check ins on frequency, as well as the times they have been overstressed while controlling.
+An over-engineered counter bot that allows for our controllers to track the "with you" check ins on frequency, as well as the times they have been overstressed while controlling.
 
 This is a Python Discord bot. It was made in Python 3.8 (although, you could probably run it from Python 3.5.3>) with the Discord.py, Python-dotenv, aiomysql dependencies. It also features a database connection (using MySQL) for tracking how many times a specific user has used the commands.
 
